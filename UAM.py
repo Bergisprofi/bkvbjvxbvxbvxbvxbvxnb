@@ -137,7 +137,7 @@ if __name__ == '__main__':
             #proxy = '77.90.158.11:50697'
             #print(proxies[0])
             cfcookie, agent = browser(target, proxy)
-            if cfcookie == [] and cfcookie == {} and "cf_clearance" in cfcookie:
+            if "cf_clearance" not in cfcookie and '__cf_bm' not in cfcookie:
                 pass
             else:
                 break
